@@ -1,0 +1,25 @@
+<header class="topo">
+  <div class="topo__conteudo">
+    <a class="marca" routerLink="/">SVG <span>Serviço Voluntário Gratificado</span></a>
+
+    <nav aria-label="Principal">
+      <a routerLink="/vagas" routerLinkActive="ativo">Vagas</a>
+      <a routerLink="/minhas-candidaturas" routerLinkActive="ativo">Minhas candidaturas</a>
+      <a routerLink="/minha-cota" routerLinkActive="ativo">Minha cota</a>
+    </nav>
+
+    @if (auth.usuario(); as usuario) {
+      <div class="usuario">
+        <span class="usuario__nome">{{ usuario.nome }}</span>
+        @if (usuario.matricula) {
+          <span class="usuario__matricula">Mat. {{ usuario.matricula }}</span>
+        }
+        <button type="button" class="btn btn--texto" (click)="sair()">Sair</button>
+      </div>
+    }
+  </div>
+</header>
+
+<main class="pagina">
+  <router-outlet />
+</main>

@@ -1,0 +1,104 @@
+<a class="voltar" routerLink="/vagas">← Voltar às vagas</a>
+
+@if (carregando()) {
+  <p class="estado">Carregando…</p>
+} @else if (erro() || !servico()) {
+  <p class="aviso aviso--erro" role="alert">Não foi possível carregar este serviço.</p>
+} @else {
+  @let s = servico()!;
+
+  <header class="cabecalho">
+    <h1>{{ s.titulo }}</h1>
+    <span class="selo" [class]="rotuloStatus[s.status].classe">{{ rotuloStatus[s.status].texto }}</span>
+  </header>
+  @if (s.ordemServico) {
+    <p class="subtitulo">{{ s.ordemServico }}</p>
+  }
+
+  <div class="detalhe">
+    <section class="card" aria-labelledby="titulo-servico">
+      <h2 id="titulo-servico">Serviço</h2>
+      <dl>
+        <dt>Data e horário</dt>
+        <dd>{{ s.inicio | date: 'EEEE, dd/MM/y · HH:mm' }} às {{ s.fim | date: 'HH:mm' }}</dd>
+        <dt>Local</dt>
+        <dd>{{ s.local }}</dd>
+        <dt>Unidade</dt>
+        <dd>{{ s.unidade }}</dd>
+        <dt>Jornada</dt>
+        <dd>{{ s.horasContadas }}h · {{ s.cotas | number: '1.0-3' }} cota</dd>
+        <dt>Gratificação</dt>
+        <dd>{{ s.valor | currency: 'BRL' }}</dd>
+        @if (s.captacaoFechaEm) {
+          <dt>Captação até</dt>
+          <dd>{{ s.captacaoFechaEm | date: 'dd/MM/y · HH:mm' }}</dd>
+        }
+      </dl>
+
+      <h2>Vagas</h2>
+      <ul class="vagas">
+        @for (v of s.vagas; track v.id) {
+          <li>
+            {{ v.funcao }} · {{ v.quantidade }} {{ v.quantidade === 1 ? 'vaga' : 'vagas' }}
+            @if (v.tipoFuncao === 'SUPERVISAO') {
+              <span class="selo">Supervisão</span>
+            }
+          </li>
+        }
+      </ul>
+    </section>
+
+    <section class="card" aria-labelledby="titulo-candidatura">
+      <h2 id="titulo-candidatura">Candidatura</h2>
+
+      @if (s.jaCandidatou) {
+        <p class="aviso aviso--ok">Você já se candidatou a este serviço. Acompanhe em “Minhas candidaturas”.</p>
+      } @else if (!s.elegibilidade.elegivel) {
+        <div class="aviso aviso--erro" role="alert">
+          Você não pode se candidatar a este serviço:
+          <ul>
+            @for (v of s.elegibilidade.violacoes; track v.codigo) {
+              <li>{{ v.mensagem }}</li>
+            }
+          </ul>
+        </div>
+      } @else if (s.status !== 'CAPTACAO_ABERTA') {
+        <p class="aviso">A captação deste serviço não está aberta.</p>
+      }
+
+      @if (podeCandidatar()) {
+        <form (submit)="$event.preventDefault(); enviar()">
+          @if (s.vagas.length > 1) {
+            <fieldset>
+              <legend>Escolha a vaga</legend>
+              @for (v of s.vagas; track v.id) {
+                <label class="opcao">
+                  <input type="radio" name="vaga" [value]="v.id" [checked]="vagaSelecionada() === v.id"
+                    (change)="vagaEscolhida.set(v.id)" />
+                  {{ v.funcao }}
+                </label>
+              }
+            </fieldset>
+          }
+
+          <label class="opcao">
+            <input #declaracao type="checkbox" [checked]="declaracaoAceita()"
+              (change)="declaracaoAceita.set(declaracao.checked)" />
+            <span>
+              Declaro que não me encontro nas condições que me inabilitam ao SVG, descritas no art. 5º da Portaria
+              PMDF nº 1.280/2022, e que as informações prestadas são verdadeiras.
+            </span>
+          </label>
+
+          @if (erroEnvio(); as mensagem) {
+            <p class="aviso aviso--erro" role="alert">{{ mensagem }}</p>
+          }
+
+          <button type="submit" class="btn" [disabled]="!podeEnviar()">
+            {{ enviando() ? 'Enviando…' : 'Candidatar-me' }}
+          </button>
+        </form>
+      }
+    </section>
+  </div>
+}

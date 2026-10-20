@@ -1,0 +1,48 @@
+<h1>Minha cota</h1>
+<p class="subtitulo">Cotas em que você foi selecionado e cotas efetivamente prestadas no mês.</p>
+
+<div class="mes">
+  <button type="button" class="btn btn--secundario" (click)="mudarMes(-1)" aria-label="Mês anterior">‹</button>
+  <strong>{{ primeiroDia() | date: 'MMMM y' }}</strong>
+  <button type="button" class="btn btn--secundario" (click)="mudarMes(1)" aria-label="Próximo mês">›</button>
+</div>
+
+@if (carregando()) {
+  <p class="estado">Carregando…</p>
+} @else if (erro() || !cota()) {
+  <p class="aviso aviso--erro" role="alert">Não foi possível carregar a sua cota deste mês.</p>
+} @else {
+  @let c = cota()!;
+
+  <div class="grade resumo">
+    <section class="card">
+      <h2>Planejadas</h2>
+      <p class="numero">{{ c.planejadas | number: '1.0-3' }}</p>
+      <p class="legenda">Serviços em que você foi selecionado neste mês.</p>
+    </section>
+
+    <section class="card">
+      <h2>Realizadas</h2>
+      <p class="numero">{{ c.realizadas | number: '1.0-3' }}</p>
+      <p class="legenda">Cotas efetivamente prestadas, base do pagamento.</p>
+    </section>
+
+    <section class="card">
+      <h2>Valor previsto</h2>
+      <p class="numero">{{ c.valorPrevisto | currency: 'BRL' }}</p>
+      <p class="legenda">Pago junto com a remuneração do mês seguinte.</p>
+    </section>
+  </div>
+
+  <section class="card teto">
+    <h2>Limite individual</h2>
+    @if (c.tetoIndividual !== null) {
+      <progress [value]="c.planejadas" [max]="c.tetoIndividual"></progress>
+      <p class="legenda">
+        {{ c.planejadas | number: '1.0-3' }} de {{ c.tetoIndividual | number: '1.0-3' }} cotas planejadas.
+      </p>
+    } @else {
+      <p class="legenda">Não há limite individual de cotas configurado.</p>
+    }
+  </section>
+}

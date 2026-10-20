@@ -1,0 +1,51 @@
+<h1>Vagas</h1>
+<p class="subtitulo">Serviços voluntários abertos para candidatura.</p>
+
+<div class="filtros">
+  <label>
+    <span class="sr-only">Buscar por título, local ou unidade</span>
+    <input #campo type="search" placeholder="Buscar por título, local ou unidade" [value]="busca()"
+      (input)="busca.set(campo.value)" />
+  </label>
+  <label class="filtros__check">
+    <input #apenas type="checkbox" [checked]="somenteDisponiveis()" (change)="somenteDisponiveis.set(apenas.checked)" />
+    Mostrar só as que posso me candidatar
+  </label>
+</div>
+
+@if (carregando()) {
+  <p class="estado">Carregando vagas…</p>
+} @else if (erro()) {
+  <p class="aviso aviso--erro" role="alert">Não foi possível carregar as vagas. Tente novamente em instantes.</p>
+} @else if (servicos().length === 0) {
+  <p class="estado">Nenhuma vaga encontrada para os filtros escolhidos.</p>
+} @else {
+  <div class="grade">
+    @for (s of servicos(); track s.id) {
+      <article class="card servico">
+        <header class="servico__cabecalho">
+          <h2><a [routerLink]="['/vagas', s.id]">{{ s.titulo }}</a></h2>
+          <span class="selo" [class]="rotuloStatus[s.status].classe">{{ rotuloStatus[s.status].texto }}</span>
+        </header>
+
+        <p class="servico__linha">
+          {{ s.inicio | date: 'EEE, dd/MM · HH:mm' }} às {{ s.fim | date: 'HH:mm' }}
+        </p>
+        <p class="servico__linha servico__linha--suave">{{ s.local }} · {{ s.unidade }}</p>
+        <p class="servico__linha">
+          {{ s.horasContadas }}h · {{ s.cotas | number: '1.0-3' }} cota · {{ s.valor | currency: 'BRL' }}
+        </p>
+        <p class="servico__linha servico__linha--suave">{{ totalDeVagas(s) }} vagas</p>
+
+        @if (situacao(s); as situacao) {
+          <footer>
+            <span class="selo" [class]="situacao.classe">{{ situacao.texto }}</span>
+            @if (!s.elegibilidade.elegivel && !s.jaCandidatou) {
+              <p class="servico__motivo">{{ s.elegibilidade.violacoes[0].mensagem }}</p>
+            }
+          </footer>
+        }
+      </article>
+    }
+  </div>
+}

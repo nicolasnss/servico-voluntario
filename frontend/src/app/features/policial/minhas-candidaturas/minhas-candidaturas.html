@@ -1,0 +1,60 @@
+<h1>Minhas candidaturas</h1>
+<p class="subtitulo">Acompanhe a seleção e o histórico dos seus serviços voluntários.</p>
+
+@if (erro(); as mensagem) {
+  <p class="aviso aviso--erro" role="alert">{{ mensagem }}</p>
+}
+
+@if (candidaturas(); as lista) {
+  @if (lista.length === 0) {
+    <p class="estado">
+      Você ainda não se candidatou a nenhum serviço. <a routerLink="/vagas">Ver vagas abertas</a>
+    </p>
+  } @else {
+    <ul class="lista">
+      @for (c of lista; track c.id) {
+        <li class="card item">
+          <div class="item__principal">
+            <h2>{{ c.titulo }}</h2>
+            <p class="item__linha">{{ c.inicio | date: 'EEE, dd/MM/y · HH:mm' }} às {{ c.fim | date: 'HH:mm' }}</p>
+            <p class="item__linha item__linha--suave">{{ c.local }} · {{ c.funcao }}</p>
+            <p class="item__linha">
+              {{ c.horasContadas }}h · {{ c.cotas | number: '1.0-3' }} cota · {{ c.valor | currency: 'BRL' }}
+            </p>
+            @if (c.status === 'NAO_SELECIONADA' && c.justificativa) {
+              <p class="item__linha item__linha--suave">{{ c.justificativa }}</p>
+            }
+          </div>
+
+          <div class="item__lateral">
+            <span class="selo" [class]="rotuloStatus[c.status].classe">{{ rotuloStatus[c.status].texto }}</span>
+            @if (c.situacaoExecucao; as execucao) {
+              <span class="selo" [class]="rotuloExecucao[execucao].classe">{{ rotuloExecucao[execucao].texto }}</span>
+            }
+            @if (c.posicaoRanking) {
+              <span class="item__linha item__linha--suave">Posição {{ c.posicaoRanking }}</span>
+            }
+
+            @if (podeCancelar(c)) {
+              @if (confirmandoCancelamento() === c.id) {
+                <span class="item__confirma">
+                  Cancelar candidatura?
+                  <button type="button" class="btn" (click)="cancelar(c)">Sim, cancelar</button>
+                  <button type="button" class="btn btn--secundario" (click)="confirmandoCancelamento.set(null)">
+                    Voltar
+                  </button>
+                </span>
+              } @else {
+                <button type="button" class="btn btn--secundario" (click)="confirmandoCancelamento.set(c.id)">
+                  Cancelar candidatura
+                </button>
+              }
+            }
+          </div>
+        </li>
+      }
+    </ul>
+  }
+} @else {
+  <p class="estado">Carregando candidaturas…</p>
+}

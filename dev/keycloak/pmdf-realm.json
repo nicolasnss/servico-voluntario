@@ -1,6 +1,7 @@
 {
   "realm": "pmdf",
   "enabled": true,
+  "attributes": { "unmanagedAttributePolicy": "ENABLED" },
   "roles": {
     "realm": [
       { "name": "POLICIAL" },
@@ -20,13 +21,35 @@
       "directAccessGrantsEnabled": false,
       "redirectUris": ["http://localhost:4200/*"],
       "webOrigins": ["http://localhost:4200"],
-      "attributes": { "pkce.code.challenge.method": "S256" }
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:4200/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "matricula",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "matricula",
+            "claim.name": "matricula",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
     }
   ],
   "users": [
     {
       "username": "policial.teste",
       "enabled": true,
+      "firstName": "Policial",
+      "lastName": "Teste",
+      "email": "policial.teste@example.org",
+      "emailVerified": true,
       "attributes": { "matricula": ["1000001"] },
       "credentials": [{ "type": "password", "value": "teste", "temporary": false }],
       "realmRoles": ["POLICIAL"]
@@ -34,6 +57,10 @@
     {
       "username": "captacao.teste",
       "enabled": true,
+      "firstName": "Captação",
+      "lastName": "Teste",
+      "email": "captacao.teste@example.org",
+      "emailVerified": true,
       "attributes": { "matricula": ["1000002"] },
       "credentials": [{ "type": "password", "value": "teste", "temporary": false }],
       "realmRoles": ["POLICIAL", "RESP_CAPTACAO"]
