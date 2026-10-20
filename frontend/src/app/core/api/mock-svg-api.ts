@@ -16,7 +16,7 @@ import { SvgApi } from './svg-api';
 const VALOR_HORA = 95; // R$ 760,00 / 8h (Decreto 39.627, art. 3º)
 const LATENCIA_MS = 250;
 
-function emDias(dias: number, hora: number, minuto = 0): string {
+export function emDias(dias: number, hora: number, minuto = 0): string {
   const data = new Date();
   data.setDate(data.getDate() + dias);
   data.setHours(hora, minuto, 0, 0);

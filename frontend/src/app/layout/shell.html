@@ -6,6 +6,9 @@
       <a routerLink="/vagas" routerLinkActive="ativo">Vagas</a>
       <a routerLink="/minhas-candidaturas" routerLinkActive="ativo">Minhas candidaturas</a>
       <a routerLink="/minha-cota" routerLinkActive="ativo">Minha cota</a>
+      @if (auth.possuiPerfil('RESP_CAPTACAO', 'GESTOR_UNIDADE', 'COORD_CENTRAL')) {
+        <a routerLink="/captacao" routerLinkActive="ativo">Captação</a>
+      }
     </nav>
 
     @if (auth.usuario(); as usuario) {

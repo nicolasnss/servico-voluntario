@@ -82,7 +82,7 @@ export class MockAuthService extends AuthService {
   private readonly _usuario = signal<UsuarioLogado | null>({
     nome: 'Sd. Teste da Silva',
     matricula: '1000001',
-    perfis: ['POLICIAL'],
+    perfis: ['POLICIAL', 'RESP_CAPTACAO'],
   });
   readonly usuario = this._usuario.asReadonly();
 

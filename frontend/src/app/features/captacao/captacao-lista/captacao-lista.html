@@ -1,0 +1,36 @@
+<h1>Captação</h1>
+<p class="subtitulo">Serviços da sua unidade: abra e encerre a captação, selecione e lance as presenças.</p>
+
+@if (carregando()) {
+  <p class="estado">Carregando serviços…</p>
+} @else if (erro()) {
+  <p class="aviso aviso--erro" role="alert">Não foi possível carregar os serviços. Tente novamente em instantes.</p>
+} @else if (servicos().length === 0) {
+  <p class="estado">Nenhum serviço cadastrado para a sua unidade.</p>
+} @else {
+  <ul class="lista">
+    @for (s of servicos(); track s.id) {
+      <li class="card item">
+        <div class="item__principal">
+          <h2>{{ s.titulo }}</h2>
+          <p class="item__linha">{{ s.inicio | date: 'EEE, dd/MM · HH:mm' }} às {{ s.fim | date: 'HH:mm' }}</p>
+          <p class="item__linha item__linha--suave">
+            {{ s.local }}@if (s.ordemServico) { · {{ s.ordemServico }} }
+          </p>
+        </div>
+
+        <div class="item__numeros">
+          <span class="selo" [class]="rotuloStatus[s.status].classe">{{ rotuloStatus[s.status].texto }}</span>
+          <p class="item__linha">
+            <strong>{{ s.totalCandidatos }}</strong> {{ s.totalCandidatos === 1 ? 'candidato' : 'candidatos' }} para <strong>{{ totalDeVagas(s) }}</strong> {{ totalDeVagas(s) === 1 ? 'vaga' : 'vagas' }}
+          </p>
+          @if (s.totalSelecionados > 0) {
+            <p class="item__linha item__linha--suave">{{ s.totalSelecionados }} {{ s.totalSelecionados === 1 ? 'selecionado' : 'selecionados' }}</p>
+          }
+        </div>
+
+        <a class="btn" [routerLink]="['/captacao', s.id]">{{ acao(s) }}</a>
+      </li>
+    }
+  </ul>
+}

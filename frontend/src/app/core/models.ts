@@ -8,7 +8,14 @@ export interface UsuarioLogado {
 
 export type TipoFuncao = 'EXECUCAO' | 'SUPERVISAO';
 
-export type StatusServico = 'CAPTACAO_ABERTA' | 'CAPTACAO_ENCERRADA' | 'SELECIONADO' | 'REALIZADO' | 'CANCELADO';
+export type StatusServico =
+  | 'RASCUNHO'
+  | 'CAPTACAO_ABERTA'
+  | 'CAPTACAO_ENCERRADA'
+  | 'SELECIONADO'
+  | 'REALIZADO'
+  | 'FECHADO_PARA_PAGAMENTO'
+  | 'CANCELADO';
 
 export interface Violacao {
   codigo: string;
@@ -79,4 +86,42 @@ export interface CotaMensal {
 export interface NovaCandidatura {
   vagaId: number;
   declaracaoArt5Aceita: boolean;
+}
+
+/** Visão do responsável pela captação: o serviço com os números da captação. */
+export interface ServicoCaptacao {
+  id: number;
+  ordemServico: string | null;
+  titulo: string;
+  local: string;
+  inicio: string;
+  fim: string;
+  horasContadas: number;
+  cotas: number;
+  captacaoFechaEm: string | null;
+  status: StatusServico;
+  vagas: VagaServico[];
+  totalCandidatos: number;
+  totalSelecionados: number;
+}
+
+/** Candidato já posicionado pelo ranking do backend (menos SVG primeiro, dentro de cada vaga). */
+export interface CandidatoCaptacao {
+  candidaturaId: number;
+  vagaId: number;
+  matricula: string;
+  nome: string;
+  postoGraduacao: string;
+  cotasMesAnterior: number;
+  cotasMesAtual: number;
+  dataAdmissao: string;
+  posicao: number;
+  status: StatusCandidatura;
+  situacaoExecucao: SituacaoExecucao | null;
+}
+
+export interface SelecaoCaptacao {
+  candidaturaIds: number[];
+  /** Obrigatória quando a seleção diverge do ranking. */
+  justificativa: string | null;
 }

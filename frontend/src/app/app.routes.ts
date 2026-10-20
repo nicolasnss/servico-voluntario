@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 
-import { authGuard } from './core/auth/auth.guard';
+import { authGuard, perfilGuard } from './core/auth/auth.guard';
 import { Shell } from './layout/shell';
 
 export const routes: Routes = [
@@ -39,6 +39,24 @@ export const routes: Routes = [
         title: 'Minha cota',
         loadComponent: () =>
           import('./features/policial/minha-cota/minha-cota').then((m) => m.MinhaCota),
+      },
+      {
+        path: 'captacao',
+        canActivate: [perfilGuard('RESP_CAPTACAO', 'GESTOR_UNIDADE', 'COORD_CENTRAL')],
+        children: [
+          {
+            path: '',
+            title: 'Captação',
+            loadComponent: () =>
+              import('./features/captacao/captacao-lista/captacao-lista').then((m) => m.CaptacaoLista),
+          },
+          {
+            path: ':id',
+            title: 'Painel de captação',
+            loadComponent: () =>
+              import('./features/captacao/captacao-painel/captacao-painel').then((m) => m.CaptacaoPainel),
+          },
+        ],
       },
     ],
   },

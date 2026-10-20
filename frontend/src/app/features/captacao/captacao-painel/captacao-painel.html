@@ -1,0 +1,202 @@
+<a class="voltar" routerLink="/captacao">← Voltar à captação</a>
+
+@if (carregando()) {
+  <p class="estado">Carregando…</p>
+} @else if (!servico()) {
+  <p class="aviso aviso--erro" role="alert">{{ erro() ?? 'Não foi possível carregar este serviço.' }}</p>
+} @else {
+  @let s = servico()!;
+
+  <header class="cabecalho">
+    <h1>{{ s.titulo }}</h1>
+    <span class="selo" [class]="rotuloStatus[s.status].classe">{{ rotuloStatus[s.status].texto }}</span>
+  </header>
+  <p class="subtitulo">
+    {{ s.inicio | date: 'EEEE, dd/MM/y · HH:mm' }} às {{ s.fim | date: 'HH:mm' }} · {{ s.local }}
+    · {{ s.horasContadas }}h ({{ s.cotas | number: '1.0-3' }} cota)
+    @if (s.ordemServico) { · {{ s.ordemServico }} }
+  </p>
+
+  @if (erro(); as mensagem) {
+    <p class="aviso aviso--erro" role="alert">{{ mensagem }}</p>
+  }
+
+  @switch (s.status) {
+    @case ('RASCUNHO') {
+      <section class="card acao">
+        <p>A captação deste serviço ainda não foi aberta. Ao abrir, os policiais passam a ver a vaga e a se candidatar.</p>
+        <button type="button" class="btn" [disabled]="ocupado()" (click)="abrir()">Abrir captação</button>
+      </section>
+    }
+
+    @case ('CAPTACAO_ABERTA') {
+      <section class="card acao">
+        <p>
+          Captação aberta{{ s.captacaoFechaEm ? ' até ' : '' }}{{ s.captacaoFechaEm | date: 'dd/MM · HH:mm' }}.
+          {{ s.totalCandidatos }} candidatos até agora. A seleção só é feita depois do encerramento.
+        </p>
+        @if (confirmandoEncerramento()) {
+          <p class="aviso">Encerrar a captação impede novas candidaturas. Deseja continuar?</p>
+          <button type="button" class="btn" [disabled]="ocupado()" (click)="encerrar()">Sim, encerrar</button>
+          <button type="button" class="btn btn--secundario" (click)="confirmandoEncerramento.set(false)">Voltar</button>
+        } @else {
+          <button type="button" class="btn" [disabled]="ocupado()" (click)="confirmandoEncerramento.set(true)">
+            Encerrar captação
+          </button>
+        }
+      </section>
+    }
+
+    @case ('CAPTACAO_ENCERRADA') {
+      <p class="dica">
+        A seleção sugerida segue o ranking: quem tem <strong>menos cotas</strong> no mês anterior e no atual tem
+        prioridade. Você pode escolher de outra forma, mas precisa justificar.
+      </p>
+    }
+  }
+
+  @if (s.status === 'CAPTACAO_ABERTA' || s.status === 'CAPTACAO_ENCERRADA') {
+    @for (g of grupos(); track g.vaga.id) {
+      <section class="card grupo" [attr.aria-label]="g.vaga.funcao">
+        <header class="grupo__cabecalho">
+          <h2>
+            {{ g.vaga.funcao }}
+            @if (g.vaga.tipoFuncao === 'SUPERVISAO') {
+              <span class="selo">Supervisão</span>
+            }
+          </h2>
+          @if (s.status === 'CAPTACAO_ENCERRADA') {
+            <span class="selo" [class.selo--erro]="qtdSelecionados(g) > g.vaga.quantidade"
+              [class.selo--ok]="qtdSelecionados(g) === g.vaga.quantidade">
+              {{ qtdSelecionados(g) }} de {{ g.vaga.quantidade }} {{ g.vaga.quantidade === 1 ? 'vaga' : 'vagas' }}
+            </span>
+          } @else {
+            <span class="selo">{{ g.candidatos.length }} {{ g.candidatos.length === 1 ? 'candidato' : 'candidatos' }} · {{ g.vaga.quantidade }} {{ g.vaga.quantidade === 1 ? 'vaga' : 'vagas' }}</span>
+          }
+        </header>
+
+        @if (g.candidatos.length === 0) {
+          <p class="estado">Nenhum candidato para esta vaga.</p>
+        } @else {
+          <div class="tabela-rolagem">
+            <table>
+              <thead>
+                <tr>
+                  @if (s.status === 'CAPTACAO_ENCERRADA') {
+                    <th scope="col"><span class="sr-only">Selecionar</span></th>
+                  }
+                  <th scope="col">Pos.</th>
+                  <th scope="col">Policial</th>
+                  <th scope="col" class="num">Cotas mês anterior</th>
+                  <th scope="col" class="num">Cotas mês atual</th>
+                  <th scope="col" class="num">Total</th>
+                  <th scope="col">Admissão</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (c of g.candidatos; track c.candidaturaId) {
+                  <tr [class.dentro]="dentroDasVagas(g, c)">
+                    @if (s.status === 'CAPTACAO_ENCERRADA') {
+                      <td>
+                        <input #caixa type="checkbox" [checked]="selecionados().has(c.candidaturaId)"
+                          [attr.aria-label]="'Selecionar ' + c.nome"
+                          (change)="alternar(c.candidaturaId, caixa.checked)" />
+                      </td>
+                    }
+                    <td>{{ c.posicao }}º</td>
+                    <td>
+                      <strong>{{ c.nome }}</strong>
+                      <span class="suave">Mat. {{ c.matricula }} · {{ c.postoGraduacao }}</span>
+                    </td>
+                    <td class="num">{{ c.cotasMesAnterior | number: '1.0-3' }}</td>
+                    <td class="num">{{ c.cotasMesAtual | number: '1.0-3' }}</td>
+                    <td class="num">{{ c.cotasMesAnterior + c.cotasMesAtual | number: '1.0-3' }}</td>
+                    <td>{{ c.dataAdmissao | date: 'dd/MM/y' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+    }
+  }
+
+  @if (s.status === 'CAPTACAO_ENCERRADA') {
+    <section class="card confirmacao">
+      @if (excedeu()) {
+        <p class="aviso aviso--erro" role="alert">
+          Há mais policiais marcados do que vagas em pelo menos uma função. Desmarque até caber.
+        </p>
+      }
+
+      @if (divergiu()) {
+        <div class="aviso" role="status">
+          A seleção é diferente do ranking. Explique o motivo para registrar na auditoria.
+        </div>
+        <label class="campo">
+          <span>Justificativa (mínimo de {{ minimoJustificativa }} caracteres)</span>
+          <textarea #texto rows="3" [value]="justificativa()" (input)="justificativa.set(texto.value)"></textarea>
+        </label>
+        <button type="button" class="btn btn--secundario" (click)="restaurarRanking()">
+          Voltar à sugestão do ranking
+        </button>
+      } @else {
+        <p class="suave">A seleção atual segue o ranking.</p>
+      }
+
+      <button type="button" class="btn" [disabled]="!podeConfirmar()" (click)="confirmar()">
+        {{ ocupado() ? 'Salvando…' : 'Confirmar seleção' }}
+      </button>
+    </section>
+  }
+
+  @if (s.status === 'SELECIONADO' || s.status === 'REALIZADO' || s.status === 'FECHADO_PARA_PAGAMENTO') {
+    <section class="card grupo">
+      <header class="grupo__cabecalho">
+        <h2>Selecionados</h2>
+        <span class="selo">{{ selecionadosParaExecucao().length }} {{ selecionadosParaExecucao().length === 1 ? 'policial' : 'policiais' }}</span>
+      </header>
+      <p class="suave">Registre se o policial prestou o serviço. Só o serviço realizado é pago.</p>
+
+      <ul class="execucoes">
+        @for (c of selecionadosParaExecucao(); track c.candidaturaId) {
+          <li>
+            <div>
+              <strong>{{ c.nome }}</strong>
+              <span class="suave">Mat. {{ c.matricula }} · {{ c.postoGraduacao }}</span>
+            </div>
+            @if (c.situacaoExecucao; as situacao) {
+              <span class="selo" [class]="rotuloExecucao[situacao].classe">{{ rotuloExecucao[situacao].texto }}</span>
+            } @else {
+              <div class="botoes">
+                <button type="button" class="btn" [disabled]="ocupado()" (click)="lancar(c, 'PRESENTE')">Presente</button>
+                <button type="button" class="btn btn--secundario" [disabled]="ocupado()"
+                  (click)="lancar(c, 'FALTOU')">Faltou</button>
+                <button type="button" class="btn btn--secundario" [disabled]="ocupado()"
+                  (click)="lancar(c, 'FALTA_JUSTIFICADA')">Falta justificada</button>
+              </div>
+            }
+          </li>
+        }
+      </ul>
+    </section>
+
+    @if (naoSelecionados().length > 0) {
+      <details class="card">
+        <summary>{{ naoSelecionados().length }} {{ naoSelecionados().length === 1 ? 'candidato não selecionado' : 'candidatos não selecionados' }}</summary>
+        <ul class="execucoes">
+          @for (c of naoSelecionados(); track c.candidaturaId) {
+            <li>
+              <div>
+                <strong>{{ c.nome }}</strong>
+                <span class="suave">Mat. {{ c.matricula }} · {{ c.postoGraduacao }} · posição {{ c.posicao }}º</span>
+              </div>
+              <span class="selo" [class]="rotuloCandidatura[c.status].classe">{{ rotuloCandidatura[c.status].texto }}</span>
+            </li>
+          }
+        </ul>
+      </details>
+    }
+  }
+}

@@ -6,10 +6,12 @@ export interface Rotulo {
 }
 
 export const ROTULO_STATUS_SERVICO: Record<StatusServico, Rotulo> = {
+  RASCUNHO: { texto: 'Rascunho', classe: '' },
   CAPTACAO_ABERTA: { texto: 'Captação aberta', classe: 'selo--ok' },
   CAPTACAO_ENCERRADA: { texto: 'Captação encerrada', classe: 'selo--alerta' },
   SELECIONADO: { texto: 'Seleção concluída', classe: '' },
   REALIZADO: { texto: 'Realizado', classe: '' },
+  FECHADO_PARA_PAGAMENTO: { texto: 'Fechado para pagamento', classe: '' },
   CANCELADO: { texto: 'Cancelado', classe: 'selo--erro' },
 };
 
