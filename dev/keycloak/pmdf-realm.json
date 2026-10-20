@@ -1,0 +1,42 @@
+{
+  "realm": "pmdf",
+  "enabled": true,
+  "roles": {
+    "realm": [
+      { "name": "POLICIAL" },
+      { "name": "RESP_CAPTACAO" },
+      { "name": "GESTOR_UNIDADE" },
+      { "name": "COORD_CENTRAL" },
+      { "name": "COMANDO" },
+      { "name": "CONTROLE" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "svg-web",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["http://localhost:4200/*"],
+      "webOrigins": ["http://localhost:4200"],
+      "attributes": { "pkce.code.challenge.method": "S256" }
+    }
+  ],
+  "users": [
+    {
+      "username": "policial.teste",
+      "enabled": true,
+      "attributes": { "matricula": ["1000001"] },
+      "credentials": [{ "type": "password", "value": "teste", "temporary": false }],
+      "realmRoles": ["POLICIAL"]
+    },
+    {
+      "username": "captacao.teste",
+      "enabled": true,
+      "attributes": { "matricula": ["1000002"] },
+      "credentials": [{ "type": "password", "value": "teste", "temporary": false }],
+      "realmRoles": ["POLICIAL", "RESP_CAPTACAO"]
+    }
+  ]
+}

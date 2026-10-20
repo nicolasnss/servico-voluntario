@@ -1,0 +1,27 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: svg
+      POSTGRES_USER: svg
+      POSTGRES_PASSWORD: svg
+    ports:
+      - "5432:5432"
+    volumes:
+      - svg-pg:/var/lib/postgresql/data
+
+  # Keycloak local imitando o SSO da PMDF (realm "pmdf"). Apenas para desenvolvimento.
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HTTP_PORT: 8081
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./dev/keycloak/pmdf-realm.json:/opt/keycloak/data/import/pmdf-realm.json:ro
+
+volumes:
+  svg-pg:
