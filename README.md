@@ -2,7 +2,7 @@
 
 Sistema para gerenciar o Serviço Voluntário Gratificado da PMDF: planejamento de cotas, captação de policiais para os serviços, seleção por ranking, registro de presenças e controle do que foi realizado.
 
-> **Status:** em desenvolvimento. O esqueleto do backend (esquema, regras de negócio e segurança) e as telas do front existem; os controllers REST ainda não foram implementados. O front roda com API e login em memória enquanto isso.
+> **Status:** em desenvolvimento. Backend (esquema, regras de negócio, segurança e API REST de policial e captação) e telas do front existem. Ainda não há cadastro de serviços pela API nem dados iniciais de desenvolvimento; o front roda com API e login em memória por padrão.
 
 ## Estrutura
 
@@ -63,6 +63,8 @@ Abre em `http://localhost:4200`. Em desenvolvimento (`src/environments/environme
 cd frontend && npm test   # front (Vitest)
 ```
 
+`ApiIntegracaoTest` percorre a API contra um PostgreSQL real embutido (zonky `embedded-postgres`), sem precisar de Docker. `ServicoVoluntarioApplicationTests` usa Testcontainers e é ignorado sem Docker.
+
 ## Autenticação
 
 A API é *resource server* do SSO institucional (Keycloak, realm `pmdf`) e não tem login local. Os papéis vêm do claim `realm_access.roles` do JWT:
@@ -80,6 +82,20 @@ Usuários de teste do realm de desenvolvimento (senha `teste`):
 
 As credenciais do `docker-compose.yml` e do realm são **somente para desenvolvimento**.
 
+## API
+
+Base `/api/v1`. Erros vêm como `ProblemDetail`; a mensagem fica em `detail` e, quando há violações de regra, em `violacoes`.
+
+| Perfil | Endpoint |
+| --- | --- |
+| `POLICIAL` | `GET /servicos`, `GET /servicos/{id}` (com a elegibilidade do policial logado) |
+| `POLICIAL` | `POST /servicos/{id}/candidaturas`, `GET /minhas-candidaturas`, `DELETE /candidaturas/{id}`, `GET /minha-cota?anoMes=AAAA-MM` |
+| `RESP_CAPTACAO` | `GET /captacao/servicos`, `GET /captacao/servicos/{id}`, `GET /captacao/servicos/{id}/ranking` |
+| `RESP_CAPTACAO` | `POST /captacao/servicos/{id}/abrir`, `.../encerrar`, `.../selecionar` |
+| `RESP_CAPTACAO` | `POST /execucoes/{candidaturaId}` (presença ou falta) |
+
+O policial é identificado pelo claim `matricula` do token, que deve existir em `policial`. O responsável pela captação atua nas unidades de `papel_unidade` (perfil `RESP_CAPTACAO`); sem linha ali, apenas na própria unidade. O encerramento da captação grava a posição e as cotas de cada candidato; a seleção revalida a elegibilidade e exige justificativa (mínimo de 10 caracteres) quando diverge do ranking. O teto individual mensal só vale se houver o parâmetro `TETO_INDIVIDUAL_COTAS_MES` em `parametro`.
+
 ## Regras de negócio
 
 Implementadas em Java puro no pacote `com.nicolas.servicovoluntario.regras`, com testes unitários:
@@ -95,6 +111,8 @@ Implementadas em Java puro no pacote `com.nicolas.servicovoluntario.regras`, com
 
 ## Pendências conhecidas
 
-- Controllers REST do backend (inclusive captação).
-- Validação no servidor das regras de seleção e justificativa, hoje só no front.
+- Cadastro e edição de serviços e vagas pela API (hoje só por SQL) e dados iniciais para desenvolvimento.
+- Fechamento automático da captação em `captacao_fecha_em` (hoje a candidatura apenas respeita o prazo).
+- Cancelamento de candidatura já selecionada, correção de presença lançada, bloqueio por falta e exportação de pagamento: faltam os parâmetros da Portaria 1.280/2022.
+- Competência de pagamento (hoje o mês em que o serviço termina) e critério do ranking são provisórios.
 - Login OIDC e `HttpSvgApi` ainda não foram exercitados contra Keycloak e backend reais.
